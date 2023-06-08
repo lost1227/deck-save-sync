@@ -94,14 +94,14 @@ with SSHClient() as ssh:
         shutil.rmtree(LOCAL_DIR)
         subprocess.run([EXE_7ZIP_PATH, 'x', str(remote_backup), '-o'+str(LOCAL_DIR.parent)])
     else:
-        _, stdout, _ = ssh.exec_command("echo $(mktemp sync.XXXXXX.zip)")
+        _, stdout, _ = ssh.exec_command("mktemp /tmp/sync.XXXXXX.zip")
         tempfile = stdout.read().decode('utf-8').strip()
-        stdin, _, _ = ssh.exec_command(f"cat > /tmp/{tempfile}")
+        stdin, _, stderr = ssh.exec_command(f"cat > {tempfile}")
         with local_backup.open('rb') as inf:
             stdin.write(inf.read())
         print(tempfile)
         _, stdout, _ = ssh.exec_command(f"rm -r {REMOTE_DIR.as_posix()}")
         print(stdout.read().decode("utf-8").strip())
-        _, stdout, _ = ssh.exec_command(f"unzip /tmp/{tempfile} -d {REMOTE_DIR.parent.as_posix()} && rm /tmp/{tempfile}")
+        _, stdout, _ = ssh.exec_command(f"unzip {tempfile} -d {REMOTE_DIR.parent.as_posix()} && rm {tempfile}")
         print(stdout.read().decode("utf-8").strip())
 
